@@ -1,0 +1,11 @@
+{
+  "name": "turbostock",
+  "version": "0.0.0",
+  "description": "Outil de gestion des stocks - version ultra simplifiée pour faire des exercies de test logiciel",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lucien Bill",
+  "license": "ISC"
+}
