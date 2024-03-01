@@ -17,8 +17,7 @@ db.serialize(() => {
   const tablesToDrop = [
     "profiles",
     "inventory",
-    "commands",
-    "profile_rights_per_table",
+    "orders"
   ];
 
   for (let index = 0; index < tablesToDrop.length; index++) {
@@ -35,11 +34,16 @@ db.serialize(() => {
     "CREATE TABLE profiles (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
       name TEXT NOT NULL)",
-    "CREATE TABLE profile_rights_per_table (\
+    "CREATE TABLE inventory (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
-      profile_id INTEGER NOT NULL, \
-      table_name TEXT NOT NULL, \
-      FOREIGN KEY (profile_id) REFERENCES profiles(id))",
+      description TEXT NOT NULL, \
+      quantity INTEGER NOT NULL, \
+      is_activated BOOL NOT NULL, \
+      is_featured_in_orders BOOL NOT NULL)", // This is meant not to work properly
+    "CREATE TABLE orders (\
+      id INTEGER PRIMARY KEY AUTOINCREMENT, \
+      status TEXT NOT NULL\
+      content TEXT)"
   ];
 
   for (let index = 0; index < sqlCreateRequests.length; index++) {
