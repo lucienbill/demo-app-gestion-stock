@@ -34,10 +34,11 @@ db.serialize(() => {
   const sqlCreateRequests = [
     "CREATE TABLE profiles (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
-      name TEXT)",
+      name TEXT NOT NULL)",
     "CREATE TABLE profile_rights_per_table (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
-      profile_id INTEGER, \
+      profile_id INTEGER NOT NULL, \
+      table_name TEXT NOT NULL, \
       FOREIGN KEY (profile_id) REFERENCES profiles(id))",
   ];
 
