@@ -14,11 +14,7 @@ const db = new sqlite3.Database(
 db.serialize(() => {
   // DROP
   console.log("Dropping all tables if they exist ...");
-  const tablesToDrop = [
-    "profiles",
-    "inventory",
-    "orders"
-  ];
+  const tablesToDrop = ["profiles", "inventory", "orders"];
 
   for (let index = 0; index < tablesToDrop.length; index++) {
     const table = tablesToDrop[index];
@@ -43,20 +39,18 @@ db.serialize(() => {
     "CREATE TABLE orders (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
       status TEXT NOT NULL\
-      content TEXT)"
+      content TEXT)",
   ];
 
   for (let index = 0; index < sqlCreateRequests.length; index++) {
-    const sqlRequest = sqlCreateRequests[index].replace(/\s+/g," ");
+    const sqlRequest = sqlCreateRequests[index].replace(/\s+/g, " ");
     db.run(sqlRequest);
     console.log(`|  ${sqlRequest}`);
   }
   console.log("Creating all tables ...");
 
   // INSERT DATA
-  const stmt = db.prepare(
-    "INSERT INTO profiles (name) VALUES (?)",
-  );
+  const stmt = db.prepare("INSERT INTO profiles (name) VALUES (?)");
   stmt.run("placeholder");
   stmt.finalize();
 
