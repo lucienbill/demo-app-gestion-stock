@@ -38,7 +38,7 @@ db.serialize(() => {
       is_featured_in_orders BOOL NOT NULL)", // This is meant not to work properly
     "CREATE TABLE orders (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
-      status TEXT NOT NULL\
+      status TEXT NOT NULL, \
       content TEXT)",
   ];
 
