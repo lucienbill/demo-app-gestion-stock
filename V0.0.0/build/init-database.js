@@ -1,15 +1,7 @@
-const sqlite3 = require("sqlite3").verbose();
+const { connectToAppDb } = require("../app/turbostock-core");
 
-const db = new sqlite3.Database(
-  "./db/turbostock.db",
-  sqlite3.OPEN_READWRITE,
-  (err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log("Connected to the SQlite database.");
-  },
-);
+
+const db = connectToAppDb()
 
 db.serialize(() => {
   // DROP
