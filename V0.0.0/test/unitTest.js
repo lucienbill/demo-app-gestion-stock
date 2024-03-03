@@ -6,7 +6,6 @@ const {
   addItemsToInventory,
   readAllInventory,
 } = require("../app/turbostock-core");
-const { deserialize } = require("v8");
 const db = connectToAppDb();
 
 describe("Ecrire des données", function () {
