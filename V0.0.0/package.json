@@ -4,7 +4,7 @@
   "description": "Outil de gestion des stocks - version ultra simplifiée pour faire des exercies de test logiciel",
   "main": "index.js",
   "scripts": {
-    "init": "node build/init-database.js"
+    "init": "node build/init-database.js && node build/unitTests.js && node build/init-database.js --quiet"
   },
   "author": "Lucien Bill",
   "license": "ISC",

@@ -1,23 +1,37 @@
 const { connectToAppDb } = require("../app/turbostock-core");
 
+let quitModeActivated = false
+arguments = process.argv
+for (let index = 0; index < arguments.length; index++) {
+  const arg = arguments[index];
+  if (arg == "--quiet"){
+    quitModeActivated = true
+  }
+}
+
+function log(text) {
+  if (!quitModeActivated){
+    console.log("   " + text)
+  }
+}
 
 const db = connectToAppDb()
 
 const runInitScript = db.transaction(()=>{
   // DROP
-  console.log("Dropping all tables if they exist ...");
+  log("Dropping all tables if they exist ...");
   const tablesToDrop = ["profiles", "inventory", "orders"];
 
   for (let index = 0; index < tablesToDrop.length; index++) {
     const table = tablesToDrop[index];
 
     db.prepare(`DROP TABLE IF EXISTS ${table}`).run();
-    console.log(`|  dropped table ${table}`);
+    log(`|  dropped table ${table}`);
   }
-  console.log("Dropping all tables if they exist: Done!");
+  log("Dropping all tables if they exist: Done!");
 
   // CREATE
-  console.log("Creating all tables ...");
+  log("Creating all tables ...");
   const sqlCreateRequests = [
     "CREATE TABLE profiles (\
       id INTEGER PRIMARY KEY AUTOINCREMENT, \
@@ -37,12 +51,12 @@ const runInitScript = db.transaction(()=>{
   for (let index = 0; index < sqlCreateRequests.length; index++) {
     const sqlRequest = sqlCreateRequests[index].replace(/\s+/g, " ");
     db.prepare(sqlRequest).run();
-    console.log(`|  ${sqlRequest}`);
+    log(`|  ${sqlRequest}`);
   }
-  console.log("Creating all tables: Done!");
+  log("Creating all tables: Done!");
 });
 
+console.log("Initializing database...")
 runInitScript()
-
 db.close();
-console.log("Closed the database connection.");
+console.log("Initializing database: Done")
