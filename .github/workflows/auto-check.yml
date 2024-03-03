@@ -26,4 +26,4 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: cd V0.0.0 && npm install && npm run-script init
+    - run: npm run-script init
