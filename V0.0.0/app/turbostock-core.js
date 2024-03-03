@@ -1,37 +1,32 @@
-const sqlite3 = require("sqlite3").verbose();
 
 function connectToAppDb() {
-  const db = new sqlite3.Database(
+  const db = require('better-sqlite3')(
     "./db/turbostock.db",
-    sqlite3.OPEN_READWRITE,
-    (err) => {
-      if (err) {
-        return console.error(err.message);
-      }
-      console.log("Connected to the SQlite database.");
-    }
-  );
+  )
+  db.pragma('journal_mode = WAL');
+  console.log("Connected to the SQlite database.");
   return db;
 }
 exports.connectToAppDb = connectToAppDb;
 
-function addItemToInventory(db, description, quantity=0) {
-    console.log("inserting data into table inventory - ")
-    const stmt = db.prepare("INSERT INTO inventory (description, quantity, is_activated, is_featured_in_orders) VALUES (?, ?, TRUE, FALSE)");
-    stmt.run(description, quantity);
-    stmt.finalize();
-    console.log("inserted: (description, quantity, is_activated, is_featured_in_orders) = (${description}, ${quantity}, TRUE, FALSE)")
+function addItemsToInventory(db, items = []) {
+  // items = [{description:"string", quantity:"integer"}, {...}]
+  console.log("inserting data into table inventory - ")
+  const interItem = db.prepare("INSERT INTO inventory (description, quantity, is_activated, is_featured_in_orders) VALUES (?, ?, TRUE, FALSE)");
+  try {
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
+      interItem.run(item.description, item.quantity)
+    }
+  } catch (err) {
+    if (!db.inTransaction) throw err; // (transaction was forcefully rolled back)
+    console.error("Failed to insert data -> ROLLBACK")
+  }
+  console.log("inserted the data")
 }
-exports.addItemToInventory = addItemToInventory
+exports.addItemsToInventory = addItemsToInventory
 
 function readAllInventory(db) {
-    db.all("SELECT * FROM profiles", (err, rows) => {
-        if (err) {
-          console.error("Error querying data:", err);
-          return;
-        }
-    
-        console.log("Query results:", rows);
-    })
+  return db.prepare("SELECT * FROM inventory").all()
 }
 exports.readAllInventory = readAllInventory

@@ -3,7 +3,7 @@ const { connectToAppDb } = require("../app/turbostock-core");
 
 const db = connectToAppDb()
 
-db.serialize(() => {
+const runInitScript = db.transaction(()=>{
   // DROP
   console.log("Dropping all tables if they exist ...");
   const tablesToDrop = ["profiles", "inventory", "orders"];
@@ -11,7 +11,7 @@ db.serialize(() => {
   for (let index = 0; index < tablesToDrop.length; index++) {
     const table = tablesToDrop[index];
 
-    db.run(`DROP TABLE IF EXISTS ${table}`);
+    db.prepare(`DROP TABLE IF EXISTS ${table}`).run();
     console.log(`|  dropped table ${table}`);
   }
   console.log("Dropping all tables if they exist: Done!");
@@ -36,31 +36,13 @@ db.serialize(() => {
 
   for (let index = 0; index < sqlCreateRequests.length; index++) {
     const sqlRequest = sqlCreateRequests[index].replace(/\s+/g, " ");
-    db.run(sqlRequest);
+    db.prepare(sqlRequest).run();
     console.log(`|  ${sqlRequest}`);
   }
-  console.log("Creating all tables ...");
-
-  // INSERT DATA
-  const stmt = db.prepare("INSERT INTO profiles (name) VALUES (?)");
-  stmt.run("placeholder");
-  stmt.finalize();
-
-  console.log("Data inserted successfully!");
-
-  db.all("SELECT * FROM profiles", (err, rows) => {
-    if (err) {
-      console.error("Error querying data:", err);
-      return;
-    }
-
-    console.log("Query results:", rows);
-  });
-
-  db.close((err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log("Closed the database connection.");
-  });
+  console.log("Creating all tables: Done!");
 });
+
+runInitScript()
+
+db.close();
+console.log("Closed the database connection.");

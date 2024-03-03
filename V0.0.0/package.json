@@ -9,10 +9,11 @@
   "author": "Lucien Bill",
   "license": "ISC",
   "dependencies": {
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "better-sqlite3": "^9.4.3"
   },
   "devDependencies": {
+    "chai": "^5.1.0",
+    "mocha": "^10.3.0",
     "prettier": "3.2.5"
   }
 }
