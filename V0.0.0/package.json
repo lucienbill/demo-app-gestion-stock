@@ -4,7 +4,8 @@
   "description": "Outil de gestion des stocks - version ultra simplifiée pour faire des exercies de test logiciel",
   "main": "index.js",
   "scripts": {
-    "init": "node build/init-database.js && node build/unitTests.js && node build/init-database.js --quiet"
+    "test": "mocha --reporter=nyan",
+    "init": "node build/init-database.js && mocha --reporter=nyan && node build/init-database.js --quiet"
   },
   "author": "Lucien Bill",
   "license": "ISC",
@@ -12,7 +13,6 @@
     "better-sqlite3": "^9.4.3"
   },
   "devDependencies": {
-    "chai": "^5.1.0",
     "mocha": "^10.3.0",
     "prettier": "3.2.5"
   }
