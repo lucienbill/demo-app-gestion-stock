@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter=nyan",
-    "init": "node build/init-database.js && mocha --reporter=nyan && node build/init-database.js --quiet"
+    "init": "node build/init-database.js && mocha --reporter=nyan && node build/init-database.js --quiet",
+    "format": "npx prettier . --write"
   },
   "author": "Lucien Bill",
   "license": "ISC",
