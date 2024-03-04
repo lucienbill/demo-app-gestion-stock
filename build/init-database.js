@@ -54,6 +54,25 @@ const runInitScript = db.transaction(()=>{
     log(`|  ${sqlRequest}`);
   }
   log("Creating all tables: Done!");
+
+  log("Creating all profiles ...")
+  const insertProfile = db.prepare(
+    "INSERT INTO profiles (name) VALUES (?)"
+  );
+  const profiles = [
+    "Supervision 1",
+    "Supervision 2",
+    "Commanditaire",
+    "Livreur·se",
+    "Gestionnaire"
+  ]
+
+  for (let index = 0; index < profiles.length; index++) {
+    const profile = profiles[index];
+    insertProfile.run(profile)
+  }
+
+  log("Creating all profiles: Done!")
 });
 
 console.log("Initializing database...")

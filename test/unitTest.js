@@ -5,6 +5,7 @@ const {
   connectToAppDb,
   addItemsToInventory,
   readAllInventory,
+  createAnOrder,
 } = require("../app/turbostock-core");
 const db = connectToAppDb();
 
@@ -28,9 +29,41 @@ describe("Ecrire des données", function () {
       const actualData = JSON.stringify(readAllInventory(db));
       assert.equal(expectedData, actualData);
     });
+
+    it("Test: créer plusieurs nouvelles références dans l'inventaire", function () {
+      assert.equal([1, 2, 3].indexOf(4), -1);
+      addItemsToInventory(db, [
+        { description: "paire de sandales bleues, taille 38", quantity: 25 },
+        { description: "crayon à papier basique", quantity: 5 },
+      ]);
+      const expectedData = JSON.stringify([
+        {
+          id: 1,
+          description: "paire de sandales roses, taille 42",
+          quantity: 12,
+          is_activated: 1,
+          is_featured_in_orders: 0
+        },
+        { id:2, description: "paire de sandales bleues, taille 38", quantity: 25, is_activated: 1, is_featured_in_orders: 0  },
+        { id:3, description: "crayon à papier basique", quantity: 5, is_activated: 1, is_featured_in_orders: 0  },
+      ]);
+
+      const actualData = JSON.stringify(readAllInventory(db));
+      assert.equal(expectedData, actualData);
+    });
   });
 
-  describe("TODO: preparer une commande", () => {});
+  describe("TODO: preparer une commande", function () {
+    it("Passer une commande de 1 référence", function () {
+      const message = JSON.stringify(createAnOrder(db, profileId=1, content=[]))
+      const expectedMessage = JSON.stringify({
+        "error":"profile 1 is not allowed to create an order",
+        "content":[]
+      })
+      assert.equal(expectedMessage, message)
+      // FIXME: that's not the code I actually want to write
+    })
+  });
 });
 
 describe("TODO: Lire des données", function () {
