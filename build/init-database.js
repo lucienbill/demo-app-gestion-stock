@@ -15,7 +15,11 @@ function log(text) {
   }
 }
 
-const db = connectToAppDb()
+const handler = connectToAppDb()
+if (handler.err != ""){
+  throw(handler.err)
+}
+const db = handler.content
 
 const runInitScript = db.transaction(()=>{
   // DROP

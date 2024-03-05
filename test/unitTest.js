@@ -7,13 +7,13 @@ const {
   readAllInventory,
   createAnOrder,
 } = require("../app/turbostock-core");
-const db = connectToAppDb();
+const db = connectToAppDb().content;
 
 describe("Ecrire des données", function () {
   describe("addItemsToInventory", function () {
     it("Test: créer une nouvelle référence dans l'inventaire", function () {
       assert.equal([1, 2, 3].indexOf(4), -1);
-      addItemsToInventory(db, [
+      const fctReturn = addItemsToInventory(db, [
         { description: "paire de sandales roses, taille 42", quantity: 12 },
       ]);
       const expectedData = JSON.stringify([
@@ -26,12 +26,13 @@ describe("Ecrire des données", function () {
         },
       ]);
 
-      const actualData = JSON.stringify(readAllInventory(db));
-      assert.equal(expectedData, actualData);
+      const actualData = readAllInventory(db);
+      assert.equal(JSON.stringify(actualData.content), expectedData);
+
+      assert.equal(fctReturn.err, "", "Expected no error message");
     });
 
     it("Test: créer plusieurs nouvelles références dans l'inventaire", function () {
-      assert.equal([1, 2, 3].indexOf(4), -1);
       addItemsToInventory(db, [
         { description: "paire de sandales bleues, taille 38", quantity: 25 },
         { description: "crayon à papier basique", quantity: 5 },
@@ -42,27 +43,41 @@ describe("Ecrire des données", function () {
           description: "paire de sandales roses, taille 42",
           quantity: 12,
           is_activated: 1,
-          is_featured_in_orders: 0
+          is_featured_in_orders: 0,
         },
-        { id:2, description: "paire de sandales bleues, taille 38", quantity: 25, is_activated: 1, is_featured_in_orders: 0  },
-        { id:3, description: "crayon à papier basique", quantity: 5, is_activated: 1, is_featured_in_orders: 0  },
+        {
+          id: 2,
+          description: "paire de sandales bleues, taille 38",
+          quantity: 25,
+          is_activated: 1,
+          is_featured_in_orders: 0,
+        },
+        {
+          id: 3,
+          description: "crayon à papier basique",
+          quantity: 5,
+          is_activated: 1,
+          is_featured_in_orders: 0,
+        },
       ]);
 
-      const actualData = JSON.stringify(readAllInventory(db));
-      assert.equal(expectedData, actualData);
+      const actualData = readAllInventory(db).content;
+      assert.equal(JSON.stringify(actualData), expectedData);
     });
   });
 
   describe("TODO: preparer une commande", function () {
     it("Passer une commande de 1 référence", function () {
-      const message = JSON.stringify(createAnOrder(db, profileId=1, content=[]))
+      const message = JSON.stringify(
+        createAnOrder(db, (profileId = 1), (content = [])),
+      );
       const expectedMessage = JSON.stringify({
-        "error":"profile 1 is not allowed to create an order",
-        "content":[]
-      })
-      assert.equal(expectedMessage, message)
+        error: "profile 1 is not allowed to create an order",
+        content: [],
+      });
+      assert.equal(expectedMessage, message);
       // FIXME: that's not the code I actually want to write
-    })
+    });
   });
 });
 
