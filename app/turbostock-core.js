@@ -92,7 +92,7 @@ function createAnOrder(db, profile, contentToOrder = []) {
     // FIXME: better to use prepared statement.
     // But "dynamic size" might be bad - see https://stackoverflow.com/a/189399/4837985
     const sqlStatement = db.prepare(
-      `SELECT id, quantity FROM inventory WHERE id IN (${
+      `SELECT id, quantity, description FROM inventory WHERE id IN (${
         "" + listOfIdToQueryForQuantity
       }) and is_activated is True ORDER BY id`,
     );
@@ -101,13 +101,13 @@ function createAnOrder(db, profile, contentToOrder = []) {
     const errStack = [];
     for (let index = 0; index < listOfIdToQueryForQuantity.length; index++) {
       const elementToOrder = contentToOrder[index];
-      const availableQuantity = availableItems[index];
+      const availableQuantity = availableItems[index].quantity;
 
       if (elementToOrder.object_id != availableItems[index].id) {
-        throw new Error("Somehow, this piece of code doesn't work at all!");
+        throw new Error("Something is very wrong in the code itself");
       }
 
-      if (elementToOrder.object_id < elementToOrder.quantity) {
+      if (availableQuantity < elementToOrder.quantity) {
         errStack.push(
           `Not enough available quantity for object ${elementToOrder.object_id}. Requested ${elementToOrder.object_id}, Available = ${elementToOrder.quantity}`,
         );
@@ -117,10 +117,18 @@ function createAnOrder(db, profile, contentToOrder = []) {
       throw new Error("" + errStack);
     }
 
+    // TODO - this is a WIP
     // sanity checks OK -> do the order
+    // const orderContent = []
     // TODO: transaction.
-    //  For each object, substract requested qtty from intentory
-    //  Then: insert order
+    //  For each object
+      // substract requested qtty from intentory
+      // UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id
+      // orderContent.push({"item":availableItems[index].description}, "item_id":elementToOrder.id; "quantity":quantityOrdered)
+    // Then: insert order
+    // INSERT INTO orders VALUES (status, content)
+    //    status = "PREPARATION_ONGOING" //FIXME: use a constant, like APP_PROFILES
+    // content = JSON.stringify(orderContent)
   } catch (error) {
     returnedObject.err = `Failed to intiate an order. Error: ${error}`;
   }
