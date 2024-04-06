@@ -63,7 +63,7 @@ const runInitScript = db.transaction(()=>{
   const insertProfile = db.prepare(
     "INSERT INTO profiles (name) VALUES (?)"
   );
-  const profiles = [
+  const profiles = [ // FIXME: this is dirty. Defined in the DB, but never really used
     "Supervision 1",
     "Supervision 2",
     "Commanditaire",

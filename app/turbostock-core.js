@@ -1,4 +1,8 @@
+const { APP_PROFILES } = require("./APP_PROFILES");
+
 function connectToAppDb() {
+  // FIXME: maybe abstract this instanciation of "returnedObject",
+  // I always use the same format
   const returnedObject = { err: "", content: null };
   try {
     const db = require("better-sqlite3")("./db/turbostock.db");
@@ -13,21 +17,29 @@ function connectToAppDb() {
 exports.connectToAppDb = connectToAppDb;
 
 function addItemsToInventory(db, items = []) {
-  // FIXME: use transaction. See https://github.com/WiseLibs/better-sqlite3/blob/v5.0.1/docs/api.md#transactionfunction---function
   const returnedObject = { err: "", content: null };
-  // items = [{description:"string", quantity:"integer"}, {...}]
-  const sqlStatement = db.prepare(
+
+  const insertStatement = db.prepare(
     "INSERT INTO inventory (description, quantity, is_activated, \
-      is_featured_in_orders) VALUES (?, ?, TRUE, FALSE)",
+    is_featured_in_orders) VALUES (@description, @quantity, TRUE, FALSE)",
   );
-  try {
-    for (let index = 0; index < items.length; index++) {
-      const item = items[index];
-      sqlStatement.run(item.description, item.quantity);
+
+  const insertMany = db.transaction((itemsToInsert) => {
+    for (let index = 0; index < itemsToInsert.length; index++) {
+      const item = itemsToInsert[index];
+      insertStatement.run({
+        description: item.description,
+        quantity: item.quantity,
+      });
     }
+  });
+
+  try {
+    insertMany(items);
   } catch (err) {
     returnedObject.err = `Failed to add item(s) to inventory. Error: ${err}`;
   }
+
   return returnedObject;
 }
 exports.addItemsToInventory = addItemsToInventory;
@@ -43,7 +55,7 @@ function readAllInventory(db) {
 }
 exports.readAllInventory = readAllInventory;
 
-function createAnOrder(db, contentToOrder = []) {
+function createAnOrder(db, profile, contentToOrder = []) {
   /* 
     content = [{
       object_id: ... // id from inventory
@@ -51,6 +63,10 @@ function createAnOrder(db, contentToOrder = []) {
     }, {...}]
   */
   const returnedObject = { err: "", content: null };
+  if (profile != APP_PROFILES.ORDER_MAKER){
+    returnedObject.err = `profile ${profile} is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`
+    return returnedObject
+  }
 
   try {
     // some sanity checks

@@ -7,6 +7,7 @@ const {
   readAllInventory,
   createAnOrder,
 } = require("../app/turbostock-core");
+const { APP_PROFILES } = require("../app/APP_PROFILES");
 const db = connectToAppDb().content;
 
 describe("Ecrire des données", function () {
@@ -67,17 +68,18 @@ describe("Ecrire des données", function () {
   });
 
   describe("TODO: preparer une commande", function () {
-    it("Passer une commande de 1 référence", function () {
+    it("Passer une commande de 1 référence avec profil non-autorisé", function () {
       const message = JSON.stringify(
-        createAnOrder(db, (profileId = 1), (content = [])),
+        createAnOrder(db, "fake_unauthorized", []),
       );
       const expectedMessage = JSON.stringify({
-        error: "profile 1 is not allowed to create an order",
-        content: [],
+        err: `profile fake_unauthorized is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`,
+        content: null,
       });
       assert.equal(expectedMessage, message);
-      // FIXME: that's not the code I actually want to write
     });
+
+    // TODO : tester avec le bon profil
   });
 });
 
