@@ -107,9 +107,9 @@ function createAnOrder(db, profile, contentToOrder = []) {
         throw new Error("Something is very wrong in the code itself");
       }
 
-      if (availableQuantity < elementToOrder.quantity) {
+      if (availableQuantity < Number(elementToOrder.quantity)) {
         errStack.push(
-          `Not enough available quantity for object ${elementToOrder.object_id}. Requested ${elementToOrder.object_id}, Available = ${elementToOrder.quantity}`,
+          `Not enough available quantity for object ${elementToOrder.object_id}. Requested ${elementToOrder.quantity}, Available = ${availableQuantity}`,
         );
       }
     }
@@ -117,18 +117,57 @@ function createAnOrder(db, profile, contentToOrder = []) {
       throw new Error("" + errStack);
     }
 
-    // TODO - this is a WIP
     // sanity checks OK -> do the order
-    // const orderContent = []
-    // TODO: transaction.
-    //  For each object
-    // substract requested qtty from intentory
-    // UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id
-    // orderContent.push({"item":availableItems[index].description}, "item_id":elementToOrder.id; "quantity":quantityOrdered)
-    // Then: insert order
-    // INSERT INTO orders VALUES (status, content)
-    //    status = "PREPARATION_ONGOING" //FIXME: use a constant, like APP_PROFILES
-    // content = JSON.stringify(orderContent)
+    const orderContent = [];
+    const statementReadStock = db.prepare(
+      "SELECT quantity FROM inventory WHERE id = @id",
+    );
+    const statementUpdateStock = db.prepare(
+      "UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id",
+    );
+    const statementRecordOrder = db.prepare(
+      "INSERT INTO orders (status, content) VALUES (@status, @content) RETURNING id",
+    );
+
+    // SQL transaction: rollback is error
+    const transaction = db.transaction((contentToOrder) => {
+      // For each object to order
+      for (let index = 0; index < contentToOrder.length; index++) {
+        const elementToOrder = contentToOrder[index];
+
+        // Update the inventory (stock)
+        const currentStock = statementReadStock.get({
+          id: elementToOrder.object_id,
+        }).quantity;
+        const newStock = currentStock - Number(elementToOrder.quantity);
+
+        if (newStock < 0) {
+          throw new Error(
+            `Not enough available quantity for object ${elementToOrder.object_id}. Requested ${elementToOrder.quantity}, Available = ${availableQuantity}`,
+          );
+        }
+        statementUpdateStock.run({
+          newInventoryQuantity: newStock,
+          id: elementToOrder.object_id,
+        });
+
+        // add the item to the order
+        orderContent.push({
+          item: availableItems[index].description,
+          item_id: elementToOrder.id,
+          quantity: elementToOrder.quantity,
+        });
+      }
+
+      // record the order
+      const id = statementRecordOrder.run({
+        status: "PREPARATION_ONGOING",
+        content: JSON.stringify(orderContent),
+      }).lastInsertRowid;
+      returnedObject.content = { id: id };
+    });
+
+    transaction(contentToOrder);
   } catch (error) {
     returnedObject.err = `Failed to intiate an order. Error: ${error}`;
   }

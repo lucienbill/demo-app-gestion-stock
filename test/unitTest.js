@@ -69,8 +69,14 @@ describe("Ecrire des données", function () {
 
   describe("TODO: preparer une commande", function () {
     it("Passer une commande de 1 référence avec profil non-autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+      ];
       const message = JSON.stringify(
-        createAnOrder(db, "fake_unauthorized", []),
+        createAnOrder(db, "fake_unauthorized", contentToOrder),
       );
       const expectedMessage = JSON.stringify({
         err: `profile fake_unauthorized is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`,
@@ -79,7 +85,54 @@ describe("Ecrire des données", function () {
       assert.equal(expectedMessage, message);
     });
 
-    // TODO : tester avec le bon profil
+    it("Passer une commande de 1 référence avec profil autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({ err: "", content: { id: 1 } });
+      assert.equal(expectedMessage, message);
+    });
+
+    it("Passer une commande de 2 références avec profil autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+        {
+          object_id: 2,
+          quantity: 1,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({ err: "", content: { id: 2 } });
+      assert.equal(expectedMessage, message);
+    });
+
+    it("Passer une commande de 1 référence, quantité trop grande", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1000,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({
+        err: `Failed to intiate an order. Error: Error: Not enough available quantity for object 1. Requested 1000, Available = 10`,
+        content: null,
+      });
+      assert.equal(expectedMessage, message);
+    });
   });
 });
 
