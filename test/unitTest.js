@@ -14,7 +14,7 @@ describe("Ecrire des données", function () {
   describe("addItemsToInventory", function () {
     it("Test: créer une nouvelle référence dans l'inventaire", function () {
       assert.equal([1, 2, 3].indexOf(4), -1);
-      const fctReturn = addItemsToInventory(db, [
+      const returnedObject = addItemsToInventory(db, [
         { description: "paire de sandales roses, taille 42", quantity: 12 },
       ]);
       const expectedData = JSON.stringify([
@@ -30,7 +30,7 @@ describe("Ecrire des données", function () {
       const actualData = readAllInventory(db);
       assert.equal(JSON.stringify(actualData.content), expectedData);
 
-      assert.equal(fctReturn.err, "", "Expected no error message");
+      assert.equal(returnedObject.err, "", "Expected no error message");
     });
 
     it("Test: créer plusieurs nouvelles références dans l'inventaire", function () {
