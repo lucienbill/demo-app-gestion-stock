@@ -63,9 +63,9 @@ function createAnOrder(db, profile, contentToOrder = []) {
     }, {...}]
   */
   const returnedObject = { err: "", content: null };
-  if (profile != APP_PROFILES.ORDER_MAKER){
-    returnedObject.err = `profile ${profile} is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`
-    return returnedObject
+  if (profile != APP_PROFILES.ORDER_MAKER) {
+    returnedObject.err = `profile ${profile} is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`;
+    return returnedObject;
   }
 
   try {
@@ -122,9 +122,9 @@ function createAnOrder(db, profile, contentToOrder = []) {
     // const orderContent = []
     // TODO: transaction.
     //  For each object
-      // substract requested qtty from intentory
-      // UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id
-      // orderContent.push({"item":availableItems[index].description}, "item_id":elementToOrder.id; "quantity":quantityOrdered)
+    // substract requested qtty from intentory
+    // UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id
+    // orderContent.push({"item":availableItems[index].description}, "item_id":elementToOrder.id; "quantity":quantityOrdered)
     // Then: insert order
     // INSERT INTO orders VALUES (status, content)
     //    status = "PREPARATION_ONGOING" //FIXME: use a constant, like APP_PROFILES

@@ -1,27 +1,27 @@
 const { connectToAppDb } = require("../app/turbostock-core");
 
-let quitModeActivated = false
-arguments = process.argv
+let quitModeActivated = false;
+arguments = process.argv;
 for (let index = 0; index < arguments.length; index++) {
   const arg = arguments[index];
-  if (arg == "--quiet"){
-    quitModeActivated = true
+  if (arg == "--quiet") {
+    quitModeActivated = true;
   }
 }
 
 function log(text) {
-  if (!quitModeActivated){
-    console.log("   " + text)
+  if (!quitModeActivated) {
+    console.log("   " + text);
   }
 }
 
-const handler = connectToAppDb()
-if (handler.err != ""){
-  throw(handler.err)
+const handler = connectToAppDb();
+if (handler.err != "") {
+  throw handler.err;
 }
-const db = handler.content
+const db = handler.content;
 
-const runInitScript = db.transaction(()=>{
+const runInitScript = db.transaction(() => {
   // DROP
   log("Dropping all tables if they exist ...");
   const tablesToDrop = ["profiles", "inventory", "orders"];
@@ -59,27 +59,26 @@ const runInitScript = db.transaction(()=>{
   }
   log("Creating all tables: Done!");
 
-  log("Creating all profiles ...")
-  const insertProfile = db.prepare(
-    "INSERT INTO profiles (name) VALUES (?)"
-  );
-  const profiles = [ // FIXME: this is dirty. Defined in the DB, but never really used
+  log("Creating all profiles ...");
+  const insertProfile = db.prepare("INSERT INTO profiles (name) VALUES (?)");
+  const profiles = [
+    // FIXME: this is dirty. Defined in the DB, but never really used
     "Supervision 1",
     "Supervision 2",
     "Commanditaire",
     "Livreur·se",
-    "Gestionnaire"
-  ]
+    "Gestionnaire",
+  ];
 
   for (let index = 0; index < profiles.length; index++) {
     const profile = profiles[index];
-    insertProfile.run(profile)
+    insertProfile.run(profile);
   }
 
-  log("Creating all profiles: Done!")
+  log("Creating all profiles: Done!");
 });
 
-console.log("Initializing database...")
-runInitScript()
+console.log("Initializing database...");
+runInitScript();
 db.close();
-console.log("Initializing database: Done")
+console.log("Initializing database: Done");
