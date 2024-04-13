@@ -1,9 +1,13 @@
 const { APP_PROFILES } = require("./APP_PROFILES");
+class ReturnedObject {
+  constructor(err = "", content = null) {
+    this.err = err;
+    this.content = content;
+  }
+}
 
 function connectToAppDb() {
-  // FIXME: maybe abstract this instanciation of "returnedObject",
-  // I always use the same format
-  const returnedObject = { err: "", content: null };
+  const returnedObject = new ReturnedObject();
   try {
     const db = require("better-sqlite3")("./db/turbostock.db");
     db.pragma("journal_mode = WAL");
@@ -17,7 +21,7 @@ function connectToAppDb() {
 exports.connectToAppDb = connectToAppDb;
 
 function addItemsToInventory(db, items = []) {
-  const returnedObject = { err: "", content: null };
+  const returnedObject = new ReturnedObject();
 
   const insertStatement = db.prepare(
     "INSERT INTO inventory (description, quantity, is_activated, \
@@ -45,7 +49,7 @@ function addItemsToInventory(db, items = []) {
 exports.addItemsToInventory = addItemsToInventory;
 
 function readAllInventory(db) {
-  const returnedObject = { err: "", content: null };
+  const returnedObject = new ReturnedObject();
   try {
     returnedObject.content = db.prepare("SELECT * FROM inventory").all();
   } catch (error) {
@@ -62,7 +66,7 @@ function createAnOrder(db, profile, contentToOrder = []) {
       quantity : ... // integer, must be <= inventory quantity
     }, {...}]
   */
-  const returnedObject = { err: "", content: null };
+  const returnedObject = new ReturnedObject();
   if (profile != APP_PROFILES.ORDER_MAKER) {
     returnedObject.err = `profile ${profile} is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`;
     return returnedObject;
