@@ -5,14 +5,18 @@ const {
   connectToAppDb,
   addItemsToInventory,
   readAllInventory,
+  createAnOrder,
+  markOderAsPrepared,
 } = require("../app/turbostock-core");
-const db = connectToAppDb();
+const { APP_PROFILES } = require("../app/APP_PROFILES");
+const { ReturnedObject } = require("../app/ReturnedObject");
+const db = connectToAppDb().content;
 
 describe("Ecrire des données", function () {
   describe("addItemsToInventory", function () {
     it("Test: créer une nouvelle référence dans l'inventaire", function () {
       assert.equal([1, 2, 3].indexOf(4), -1);
-      addItemsToInventory(db, [
+      const returnedObject = addItemsToInventory(db, [
         { description: "paire de sandales roses, taille 42", quantity: 12 },
       ]);
       const expectedData = JSON.stringify([
@@ -25,12 +29,113 @@ describe("Ecrire des données", function () {
         },
       ]);
 
-      const actualData = JSON.stringify(readAllInventory(db));
-      assert.equal(expectedData, actualData);
+      const actualData = readAllInventory(db);
+      assert.equal(JSON.stringify(actualData.content), expectedData);
+
+      assert.equal(returnedObject.err, "", "Expected no error message");
+    });
+
+    it("Test: créer plusieurs nouvelles références dans l'inventaire", function () {
+      addItemsToInventory(db, [
+        { description: "paire de sandales bleues, taille 38", quantity: 25 },
+        { description: "crayon à papier basique", quantity: 5 },
+      ]);
+      const expectedData = JSON.stringify([
+        {
+          id: 1,
+          description: "paire de sandales roses, taille 42",
+          quantity: 12,
+          is_activated: 1,
+          is_featured_in_orders: 0,
+        },
+        {
+          id: 2,
+          description: "paire de sandales bleues, taille 38",
+          quantity: 25,
+          is_activated: 1,
+          is_featured_in_orders: 0,
+        },
+        {
+          id: 3,
+          description: "crayon à papier basique",
+          quantity: 5,
+          is_activated: 1,
+          is_featured_in_orders: 0,
+        },
+      ]);
+
+      const actualData = readAllInventory(db).content;
+      assert.equal(JSON.stringify(actualData), expectedData);
     });
   });
 
-  describe("TODO: preparer une commande", () => {});
+  describe("preparer une commande", function () {
+    it("Passer une commande de 1 référence avec profil non-autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, "fake_unauthorized", contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({
+        err: `profile fake_unauthorized is not allowed to create an order. Must belong to [\"Commanditaire\"]`,
+        content: null,
+      });
+      assert.equal(expectedMessage, message);
+    });
+
+    it("Passer une commande de 1 référence avec profil autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({ err: "", content: { id: 1 } });
+      assert.equal(expectedMessage, message);
+    });
+
+    it("Passer une commande de 2 références avec profil autorisé", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1,
+        },
+        {
+          object_id: 2,
+          quantity: 1,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({ err: "", content: { id: 2 } });
+      assert.equal(expectedMessage, message);
+    });
+
+    it("Passer une commande de 1 référence, quantité trop grande", function () {
+      const contentToOrder = [
+        {
+          object_id: 1,
+          quantity: 1000,
+        },
+      ];
+      const message = JSON.stringify(
+        createAnOrder(db, APP_PROFILES.ORDER_MAKER, contentToOrder),
+      );
+      const expectedMessage = JSON.stringify({
+        err: `Failed to intiate an order. Error: Error: Not enough available quantity for object 1. Requested 1000, Available = 10`,
+        content: null,
+      });
+      assert.equal(expectedMessage, message);
+    });
+  });
 });
 
 describe("TODO: Lire des données", function () {
@@ -42,7 +147,19 @@ describe("TODO: Lire des données", function () {
 
 describe("TODO: Modifier des données", function () {
   describe("TODO: annuler une commande", () => {});
-  describe("TODO: marquer une commande comme préparée", () => {});
+  it("marquer une commande comme préparée", () => {
+    const result = markOderAsPrepared(db, APP_PROFILES.ORDER_MAKER, 1);
+    const expected = new ReturnedObject();
+    assert.equal(JSON.stringify(expected), JSON.stringify(result));
+  });
+  it("tenter de re-marquer une commande comme préparée alors qu'elle est déjà préparée", () => {
+    const result = markOderAsPrepared(db, APP_PROFILES.ORDER_MAKER, 1);
+    const expected = {
+      err: "The selected order cannot be changed to the status PREPARED",
+      content: null,
+    };
+    assert.equal(JSON.stringify(expected), JSON.stringify(result));
+  });
   describe("TODO: Expédier une commande préparée", () => {});
   describe("TODO: Désactiver une référence de l'inventaire", () => {});
   describe("TODO: Mettre à jour le stock d'une référence de l'inventaire", () => {});

@@ -1,4 +1,5 @@
 # Nouvelle donnée : poids
+
 Ajout du poids des objets.
 A chaque référence est associée un poids unitaire.
 A chaque commande est associée un poids total
