@@ -6,8 +6,10 @@ const {
   addItemsToInventory,
   readAllInventory,
   createAnOrder,
+  markOderAsPrepared,
 } = require("../app/turbostock-core");
 const { APP_PROFILES } = require("../app/APP_PROFILES");
+const { ReturnedObject } = require("../app/ReturnedObject");
 const db = connectToAppDb().content;
 
 describe("Ecrire des données", function () {
@@ -67,7 +69,7 @@ describe("Ecrire des données", function () {
     });
   });
 
-  describe("TODO: preparer une commande", function () {
+  describe("preparer une commande", function () {
     it("Passer une commande de 1 référence avec profil non-autorisé", function () {
       const contentToOrder = [
         {
@@ -79,7 +81,7 @@ describe("Ecrire des données", function () {
         createAnOrder(db, "fake_unauthorized", contentToOrder),
       );
       const expectedMessage = JSON.stringify({
-        err: `profile fake_unauthorized is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`,
+        err: `profile fake_unauthorized is not allowed to create an order. Must belong to [\"Commanditaire\"]`,
         content: null,
       });
       assert.equal(expectedMessage, message);
@@ -145,7 +147,19 @@ describe("TODO: Lire des données", function () {
 
 describe("TODO: Modifier des données", function () {
   describe("TODO: annuler une commande", () => {});
-  describe("TODO: marquer une commande comme préparée", () => {});
+  it("marquer une commande comme préparée", () => {
+    const result = markOderAsPrepared(db, APP_PROFILES.ORDER_MAKER, 1);
+    const expected = new ReturnedObject();
+    assert.equal(JSON.stringify(expected), JSON.stringify(result));
+  });
+  it("tenter de re-marquer une commande comme préparée alors qu'elle est déjà préparée", () => {
+    const result = markOderAsPrepared(db, APP_PROFILES.ORDER_MAKER, 1);
+    const expected = {
+      err: "The selected order cannot be changed to the status PREPARED",
+      content: null,
+    };
+    assert.equal(JSON.stringify(expected), JSON.stringify(result));
+  });
   describe("TODO: Expédier une commande préparée", () => {});
   describe("TODO: Désactiver une référence de l'inventaire", () => {});
   describe("TODO: Mettre à jour le stock d'une référence de l'inventaire", () => {});

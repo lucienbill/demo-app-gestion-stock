@@ -1,10 +1,12 @@
 const { APP_PROFILES } = require("./APP_PROFILES");
-class ReturnedObject {
-  constructor(err = "", content = null) {
-    this.err = err;
-    this.content = content;
-  }
-}
+const { ReturnedObject } = require("./ReturnedObject");
+
+const ORDER_STATUS = {
+  PREPARATION_ONGOING: "PREPARATION_ONGOING",
+  PREPARED: "PREPARED",
+  CANCELED: "CANCELED",
+  SENT: "SENT",
+};
 
 function connectToAppDb() {
   const returnedObject = new ReturnedObject();
@@ -19,6 +21,16 @@ function connectToAppDb() {
   return returnedObject;
 }
 exports.connectToAppDb = connectToAppDb;
+
+function verifyProfileIsAuthorized(profileToVerify, AuthorizedProfiles = []) {
+  let err = "";
+  const ok = AuthorizedProfiles.includes(profileToVerify);
+  if (!ok) {
+    err = `profile ${profileToVerify} is not allowed to create an order. Must belong to ${JSON.stringify(AuthorizedProfiles)}`;
+  }
+
+  return err;
+}
 
 function addItemsToInventory(db, items = []) {
   const returnedObject = new ReturnedObject();
@@ -67,8 +79,10 @@ function createAnOrder(db, profile, contentToOrder = []) {
     }, {...}]
   */
   const returnedObject = new ReturnedObject();
-  if (profile != APP_PROFILES.ORDER_MAKER) {
-    returnedObject.err = `profile ${profile} is not allowed to create an order. Must be ${APP_PROFILES.ORDER_MAKER}`;
+  returnedObject.err = verifyProfileIsAuthorized(profile, [
+    APP_PROFILES.ORDER_MAKER,
+  ]);
+  if (returnedObject.err != "") {
     return returnedObject;
   }
 
@@ -130,7 +144,7 @@ function createAnOrder(db, profile, contentToOrder = []) {
       "UPDATE inventory SET quantity = @newInventoryQuantity WHERE id = @id",
     );
     const statementRecordOrder = db.prepare(
-      "INSERT INTO orders (status, content) VALUES (@status, @content) RETURNING id",
+      `INSERT INTO orders (status, content) VALUES ('${ORDER_STATUS.PREPARATION_ONGOING}', @content) RETURNING id`,
     );
 
     // SQL transaction: rollback is error
@@ -165,7 +179,6 @@ function createAnOrder(db, profile, contentToOrder = []) {
 
       // record the order
       const id = statementRecordOrder.run({
-        status: "PREPARATION_ONGOING",
         content: JSON.stringify(orderContent),
       }).lastInsertRowid;
       returnedObject.content = { id: id };
@@ -178,3 +191,42 @@ function createAnOrder(db, profile, contentToOrder = []) {
   return returnedObject;
 }
 exports.createAnOrder = createAnOrder;
+
+// Update the content of an order: TODO for much later
+
+function markOderAsPrepared(db, profile, id) {
+  const returnedObject = new ReturnedObject();
+  returnedObject.err = verifyProfileIsAuthorized(profile, [
+    APP_PROFILES.ORDER_MAKER,
+  ]);
+  if (returnedObject.err != "") {
+    return returnedObject;
+  }
+
+  // TODO: return error if status of the order is incompatible with the operation
+  const statementReadOrder = db.prepare(
+    `SELECT id FROM orders WHERE id=@id AND status = '${ORDER_STATUS.PREPARATION_ONGOING}'`,
+  );
+  const read = statementReadOrder.get({ id: id });
+  try {
+    if (read.id != id) {
+      returnedObject.err = `The selected order cannot be changed to the status ${ORDER_STATUS.PREPARED}`;
+      return returnedObject;
+    }
+  } catch (error) {
+    returnedObject.err = `The selected order cannot be changed to the status ${ORDER_STATUS.PREPARED}`;
+    return returnedObject;
+  }
+
+  const statementUpdateOrder = db.prepare(
+    `UPDATE orders SET status = '${ORDER_STATUS.PREPARED}' WHERE id=@id`,
+  );
+  try {
+    statementUpdateOrder.run({ id: id });
+  } catch (error) {
+    returnedObject.err = `Failed to update ORDER with id ${id}. SQL error = ${error}`;
+  }
+
+  return returnedObject;
+}
+exports.markOderAsPrepared = markOderAsPrepared;
